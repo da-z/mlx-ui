@@ -1,0 +1,8 @@
+.DS_Store
+.env
+.venv
+venv
+.idea
+__pycache__
+.ipynb*
+.history
