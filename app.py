@@ -7,7 +7,7 @@ from tqdm import tqdm
 tqdm(disable=True, total=0)  # initialise internal lock
 
 title = "MLX Chat"
-ver = "0.6.3"
+ver = "0.6.4"
 
 st.set_page_config(
     page_title=title,
@@ -93,7 +93,10 @@ if st.session_state.messages and sum(msg["role"] == "assistant" for msg in st.se
 
 if st.session_state.messages and sum(msg["role"] == "assistant" for msg in st.session_state.messages) > 1:
     if actions[1].button("Continue", key='continue'):
+        user_prompts = [msg["content"] for msg in st.session_state.messages if msg["role"] == "user"]
+        last_prompt = user_prompts[-1] or "Please continue your response"
         assistant_responses = [msg["content"] for msg in st.session_state.messages if msg["role"] == "assistant"]
-        full_prompt = (f"<|im_start|>user\n{prompt}<|im_end|>\n"
-                       f"<|im_start|>assistant\n" + "\n".join(assistant_responses))
-        show_chat(full_prompt, assistant_responses[-1] if assistant_responses else "")
+        last_assistant_response = assistant_responses[-1] if assistant_responses else ""
+        full_prompt = (f"<|im_start|>user\n{last_prompt}<|im_end|>\n"
+                       f"<|im_start|>assistant\n{last_assistant_response}\n")
+        show_chat(full_prompt, last_assistant_response)
