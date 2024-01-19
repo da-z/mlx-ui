@@ -7,7 +7,7 @@ from tqdm import tqdm
 tqdm(disable=True, total=0)  # initialise internal lock
 
 title = "MLX Chat"
-ver = "0.7.1"
+ver = "0.7.2"
 debug = False
 
 st.set_page_config(
@@ -20,6 +20,7 @@ st.title(title)
 
 assistant_greeting = "How may I help you?"
 
+temp = 0.8
 model_ref = st.sidebar.text_input("model", "mlx-community/Nous-Hermes-2-Mixtral-8x7B-DPO-4bit")
 prompt_sys = st.sidebar.text_area("system prompt",
                                   "You are an AI assistant, a large language model trained by awesome data "
@@ -42,7 +43,7 @@ model, tokenizer = load_model(model_ref)
 def generate(the_prompt, the_model):
     tokens = []
     skip = 0
-    for token, _ in zip(generate_step(mx.array(tokenizer.encode(the_prompt)), the_model, 0.7), range(n_ctx)):
+    for token, _ in zip(generate_step(mx.array(tokenizer.encode(the_prompt)), the_model, temp), range(n_ctx)):
         if token == tokenizer.eos_token_id:
             break
         tokens.append(token.item())
@@ -95,16 +96,26 @@ if prompt := st.chat_input():
     show_chat(full_prompt)
 
 if st.session_state.messages and sum(msg["role"] == "assistant" for msg in st.session_state.messages) > 1:
-    if actions[0].button("Reset"):
+    if actions[0].button("Reset", key='reset'):
         st.session_state.messages = [{"role": "assistant", "content": assistant_greeting}]
         st.rerun()
 
 if st.session_state.messages and sum(msg["role"] == "assistant" for msg in st.session_state.messages) > 1:
     if actions[1].button("Continue", key='continue'):
+
         user_prompts = [msg["content"] for msg in st.session_state.messages if msg["role"] == "user"]
-        last_prompt = user_prompts[-1] or "Please continue your response"
+        last_prompt = user_prompts[-1] or "Please continue your response."
+
         assistant_responses = [msg["content"] for msg in st.session_state.messages if msg["role"] == "assistant"]
         last_assistant_response = assistant_responses[-1] if assistant_responses else ""
+
+        # remove last line completely, so it is regenerated correctly (in case it stopped mid-sentence)
+        last_assistant_response_lines = last_assistant_response.split('\n')
+        if len(last_assistant_response_lines) > 1:
+            last_assistant_response_lines.pop()
+            last_assistant_response = "\n".join(last_assistant_response_lines)
+
         full_prompt = (f"<|im_start|>user\n{last_prompt}<|im_end|>\n"
-                       f"<|im_start|>assistant\n{last_assistant_response}\n")
+                       f"<|im_start|>assistant\n{last_assistant_response}")
+
         show_chat(full_prompt, last_assistant_response)
