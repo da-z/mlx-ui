@@ -14,7 +14,3 @@ $ ./install.sh
 $ . ./venv/bin/activate
 $ streamlit run app.py
 ```
-
-## TODO
-
-* Add "continue" function

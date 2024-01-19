@@ -17,8 +17,12 @@ st.set_page_config(
 st.title(title)
 
 model_ref = st.sidebar.text_input("model", "mlx-community/Nous-Hermes-2-Mixtral-8x7B-DPO-4bit")
-prompt_sys = st.sidebar.text_input("system prompt", "You are an AI assistant, a large language model trained by awesome data scientists. Answer as concisely as possible.")
+prompt_sys = st.sidebar.text_input("system prompt",
+                                   "You are an AI assistant, a large language model trained by awesome data "
+                                   "scientists. Answer as concisely as possible.")
 n_ctx = st.sidebar.number_input('n_ctx', 100)
+st.sidebar.markdown("---")
+actions = st.sidebar.columns(2)
 
 
 @st.cache_resource(show_spinner=True, hash_funcs={str: lambda x: None})
@@ -41,8 +45,19 @@ def generate(prompt, model):
         skip = len(s)
 
 
-# with st.sidebar:
-#     pass
+def show_chat(prompt):
+    with st.chat_message("assistant"):
+        message_placeholder = st.empty()
+        response = ""
+
+        for chunk in generate(prompt, model):
+            response += chunk
+            message_placeholder.markdown(response + "▌")
+
+        message_placeholder.markdown(response)
+
+    st.session_state.messages.append({"role": "assistant", "content": response})
+
 
 if "messages" not in st.session_state:
     st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?"}]
@@ -54,18 +69,27 @@ if prompt := st.chat_input():
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
 
-    full_prompt = (f"<|im_start|>system\n{prompt_sys}<|im_end|>"
-                   f"<|im_start|>user\n{prompt}<|im_end|>"
-                   f"<|im_start|>assistant\n")
+    full_prompt = f"<|im_start|>system\n{prompt_sys}\n"
 
-    with st.chat_message("assistant"):
-        message_placeholder = st.empty()
-        response = ""
+    full_prompt += f"##START_PREVIOUS_DISCUSSION## (do not repeat it in chat but use it as context)\n"
+    for msg in st.session_state.messages:
+        full_prompt += f"{msg['role']} said:\n{msg['content']}\n\n"
+    full_prompt += f"##END_PREVIOUS_DISCUSSION##\n\n"
 
-        for chunk in generate(full_prompt, model):
-            response += chunk
-            message_placeholder.markdown(response + "▌")
+    full_prompt += "<|im_end|>"
 
-        message_placeholder.markdown(response)
+    full_prompt += (f"<|im_start|>user\n{prompt}<|im_end|>\n"
+                    f"<|im_start|>assistant\n")
 
-    st.session_state.messages.append({"role": "assistant", "content": response})
+    show_chat(full_prompt)
+
+if st.session_state.messages and sum(msg["role"] == "assistant" for msg in st.session_state.messages) > 1:
+    if actions[0].button("Reset"):
+        st.session_state.messages = [{"role": "assistant", "content": "How can I help you?"}]
+        st.rerun()
+
+if st.session_state.messages and sum(msg["role"] == "assistant" for msg in st.session_state.messages) > 1:
+    if actions[1].button("Continue", key='continue'):
+        assistant_responses = [msg["content"] for msg in st.session_state.messages if msg["role"] == "assistant"]
+        full_prompt = "\n".join(response for response in assistant_responses)
+        show_chat(full_prompt)
