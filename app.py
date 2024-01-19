@@ -7,7 +7,7 @@ from tqdm import tqdm
 tqdm(disable=True, total=0)  # initialise internal lock
 
 title = "MLX Chat"
-ver = "0.6.5"
+ver = "0.7"
 debug = False
 
 st.set_page_config(
@@ -31,7 +31,7 @@ st.sidebar.markdown("---")
 st.sidebar.markdown(f"v{ver} / st {st.__version__}")
 
 
-@st.cache_resource(show_spinner=True, hash_funcs={str: lambda x: None})
+@st.cache_resource(show_spinner=True)
 def load_model(ref):
     return load(ref)
 
