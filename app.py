@@ -7,6 +7,7 @@ from tqdm import tqdm
 tqdm(disable=True, total=0)  # initialise internal lock
 
 title = "MLX Chat"
+ver = "0.5"
 
 st.set_page_config(
     page_title=title,
@@ -17,12 +18,14 @@ st.set_page_config(
 st.title(title)
 
 model_ref = st.sidebar.text_input("model", "mlx-community/Nous-Hermes-2-Mixtral-8x7B-DPO-4bit")
-prompt_sys = st.sidebar.text_input("system prompt",
-                                   "You are an AI assistant, a large language model trained by awesome data "
-                                   "scientists. Answer as concisely as possible.")
-n_ctx = st.sidebar.number_input('n_ctx', 100)
+prompt_sys = st.sidebar.text_area("system prompt",
+                                  "You are an AI assistant, a large language model trained by awesome data "
+                                  "scientists. Answer as concisely as possible.")
+n_ctx = st.sidebar.number_input('context length', 100, step=100, max_value=32000)
 st.sidebar.markdown("---")
 actions = st.sidebar.columns(2)
+st.sidebar.markdown("---")
+st.sidebar.markdown(f"v{ver} / st {st.__version__}")
 
 
 @st.cache_resource(show_spinner=True, hash_funcs={str: lambda x: None})
