@@ -7,7 +7,7 @@ from tqdm import tqdm
 tqdm(disable=True, total=0)  # initialise internal lock
 
 title = "MLX Chat"
-ver = "0.7.2"
+ver = "0.7.3"
 debug = False
 
 st.set_page_config(
@@ -70,6 +70,13 @@ def show_chat(the_prompt, previous=""):
     st.session_state.messages.append({"role": "assistant", "content": response})
 
 
+def remove_last_occurrence_in_array(array_of_dicts, criteria):
+    for i in reversed(range(len(array_of_dicts))):
+        if criteria(array_of_dicts[i]):
+            del array_of_dicts[i]
+            break
+
+
 if "messages" not in st.session_state:
     st.session_state["messages"] = [{"role": "assistant", "content": assistant_greeting}]
 
@@ -82,9 +89,9 @@ if prompt := st.chat_input():
 
     full_prompt = f"<|im_start|>system\n{prompt_sys}\n"
 
-    if len(st.session_state.messages) > 1:
+    if len(st.session_state.messages) > 2:
         full_prompt += f"##START_PREVIOUS_DISCUSSION## (do not repeat it in chat but use it as context)\n"
-        for msg in st.session_state.messages[:-1]:
+        for msg in st.session_state.messages[1:-1]:
             full_prompt += f"{'ME' if msg['role'] == 'assistant' else 'USER'}:\n\n{msg['content']}\n\n"
         full_prompt += f"##END_PREVIOUS_DISCUSSION##\n\n"
 
@@ -107,9 +114,10 @@ if st.session_state.messages and sum(msg["role"] == "assistant" for msg in st.se
         last_prompt = user_prompts[-1] or "Please continue your response."
 
         assistant_responses = [msg["content"] for msg in st.session_state.messages if msg["role"] == "assistant"]
+        remove_last_occurrence_in_array(st.session_state.messages, lambda item: item.get("role") == "assistant")
         last_assistant_response = assistant_responses[-1] if assistant_responses else ""
 
-        # remove last line completely, so it is regenerated correctly (in case it stopped mid-sentence)
+        # remove last line completely, so it is regenerated correctly (in case it stopped mid-word or mid-number)
         last_assistant_response_lines = last_assistant_response.split('\n')
         if len(last_assistant_response_lines) > 1:
             last_assistant_response_lines.pop()
