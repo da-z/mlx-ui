@@ -7,7 +7,7 @@ from tqdm import tqdm
 tqdm(disable=True, total=0)  # initialise internal lock
 
 title = "MLX Chat"
-ver = "0.6.2"
+ver = "0.6.3"
 
 st.set_page_config(
     page_title=title,
@@ -39,7 +39,7 @@ model, tokenizer = load_model(model_ref)
 def generate(prompt, model):
     tokens = []
     skip = 0
-    for token, _ in zip(generate_step(mx.array(tokenizer.encode(prompt)), model), range(n_ctx)):
+    for token, _ in zip(generate_step(mx.array(tokenizer.encode(prompt)), model, 0.8), range(n_ctx)):
         if token == tokenizer.eos_token_id:
             break
         tokens.append(token.item())
