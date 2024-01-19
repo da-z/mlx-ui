@@ -11,6 +11,5 @@ $ ./install.sh
 ## Run
 
 ```shell
-$ . ./venv/bin/activate
-$ streamlit run app.py
+$ ./run.sh
 ```
