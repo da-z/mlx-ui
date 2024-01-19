@@ -7,7 +7,7 @@ from tqdm import tqdm
 tqdm(disable=True, total=0)  # initialise internal lock
 
 title = "MLX Chat"
-ver = "0.7"
+ver = "0.7.1"
 debug = False
 
 st.set_page_config(
@@ -82,10 +82,10 @@ if prompt := st.chat_input():
     full_prompt = f"<|im_start|>system\n{prompt_sys}\n"
 
     if len(st.session_state.messages) > 1:
-        full_prompt += ("\nThe following text represents your previous conversations. DO NOT include this text "
-                        "directly in your responses.\n\n")
+        full_prompt += f"##START_PREVIOUS_DISCUSSION## (do not repeat it in chat but use it as context)\n"
         for msg in st.session_state.messages[:-1]:
             full_prompt += f"{'ME' if msg['role'] == 'assistant' else 'USER'}:\n\n{msg['content']}\n\n"
+        full_prompt += f"##END_PREVIOUS_DISCUSSION##\n\n"
 
     full_prompt += "<|im_end|>\n"
 
