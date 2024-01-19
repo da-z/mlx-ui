@@ -7,7 +7,7 @@ from tqdm import tqdm
 tqdm(disable=True, total=0)  # initialise internal lock
 
 title = "MLX Chat"
-ver = "0.6.1"
+ver = "0.6"
 
 st.set_page_config(
     page_title=title,
@@ -72,12 +72,12 @@ if prompt := st.chat_input():
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
 
-    full_prompt = f"<|im_start|>system\n{prompt_sys}\n\n"
+    full_prompt = f"<|im_start|>system\n{prompt_sys}\n"
 
-    full_prompt += f"<|im_history_start|>\n"
+    full_prompt += f"##START_PREVIOUS_DISCUSSION## (do not repeat it in chat but use it as context)\n"
     for msg in st.session_state.messages:
-        full_prompt += f"{msg['role']}:\n{msg['content']}\n\n"
-    full_prompt += f"<|im_history_end|>\n\n"
+        full_prompt += f"{msg['role']} said:\n{msg['content']}\n\n"
+    full_prompt += f"##END_PREVIOUS_DISCUSSION##\n\n"
 
     full_prompt += "<|im_end|>"
 
@@ -94,6 +94,5 @@ if st.session_state.messages and sum(msg["role"] == "assistant" for msg in st.se
 if st.session_state.messages and sum(msg["role"] == "assistant" for msg in st.session_state.messages) > 1:
     if actions[1].button("Continue", key='continue'):
         assistant_responses = [msg["content"] for msg in st.session_state.messages if msg["role"] == "assistant"]
-        full_prompt = (f"<|im_start|>user\n{prompt}<|im_end|>\n"
-                       f"<|im_start|>assistant\n" + "\n".join(assistant_responses))
+        full_prompt = "\n".join(assistant_responses)
         show_chat(full_prompt, assistant_responses[-1] if assistant_responses else "")
