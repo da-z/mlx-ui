@@ -1,16 +1,17 @@
 #!/bin/sh
 
 # remove existing virtual env
-if [ -d ".venv" ]; then
-    rm -rf .venv
+if [ -d venv ]; then
+    echo 'recreating virtual env'
+    rm -rf venv
 fi
 
 # create virtual env
 pip3 install virtualenv
-python3 -m virtualenv .venv
+python3 -m virtualenv venv
 
 # activate virtual env
-. .venv/bin/activate
+. ./venv/bin/activate
 
 # install deps
 pip3 install mlx \

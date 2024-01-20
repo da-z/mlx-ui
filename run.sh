@@ -1,4 +1,4 @@
 #!/bin/sh
 
-. .venv/bin/activate
+. ./venv/bin/activate
 streamlit run app.py
