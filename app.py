@@ -1,14 +1,15 @@
-from mlx_lm import load
-from mlx_lm.utils import generate_step
 import mlx.core as mx
 import streamlit as st
-from tqdm import tqdm
-
-tqdm(disable=True, total=0)  # initialise internal lock
+from mlx_lm import load
+from mlx_lm.utils import generate_step
 
 title = "MLX Chat"
-ver = "0.7.3"
+ver = "0.7.4"
 debug = False
+
+with open('models.txt', 'r') as file:
+    model_refs = file.readlines()
+model_refs = [line.strip() for line in model_refs]
 
 st.set_page_config(
     page_title=title,
@@ -20,14 +21,30 @@ st.title(title)
 
 assistant_greeting = "How may I help you?"
 
-temp = 0.8
-model_ref = st.sidebar.text_input("model", "mlx-community/Nous-Hermes-2-Mixtral-8x7B-DPO-4bit")
-prompt_sys = st.sidebar.text_area("system prompt",
-                                  "You are an AI assistant, a large language model trained by awesome data "
-                                  "scientists. Answer as concisely as possible.")
-n_ctx = st.sidebar.number_input('context length', value=300, min_value=100, step=100, max_value=32000)
+# try to disable inputs while answering is in progress but flag does not seem to refresh correctly though
+disable_sidebar_inputs = st.session_state.get("generating_response", False)
+
+model_ref = st.sidebar.selectbox("model", model_refs,
+                                 disabled=disable_sidebar_inputs,
+                                 help="See https://huggingface.co/mlx-community for more models. Add your favorites "
+                                      "to models.txt")
+
+system_prompt = st.sidebar.text_area("system prompt",
+                                     "You are an AI assistant, a large language model trained by awesome data "
+                                     "scientists. Answer as concisely as possible.",
+                                     disabled=disable_sidebar_inputs)
+
+context_length = st.sidebar.number_input('context length', value=300, min_value=100, step=100, max_value=32000,
+                                         disabled=disable_sidebar_inputs,
+                                         help="how many maximum words to print, roughly")
+
+temperature = st.sidebar.slider('temperature', min_value=0., max_value=1., step=.10, value=.7,
+                                disabled=disable_sidebar_inputs,
+                                help="lower means less creative but more accurate", )
+
 st.sidebar.markdown("---")
 actions = st.sidebar.columns(2)
+
 st.sidebar.markdown("---")
 st.sidebar.markdown(f"v{ver} / st {st.__version__}")
 
@@ -43,7 +60,7 @@ model, tokenizer = load_model(model_ref)
 def generate(the_prompt, the_model):
     tokens = []
     skip = 0
-    for token, _ in zip(generate_step(mx.array(tokenizer.encode(the_prompt)), the_model, temp), range(n_ctx)):
+    for token, _ in zip(generate_step(mx.array(tokenizer.encode(the_prompt)), the_model, temperature), range(context_length)):
         if token == tokenizer.eos_token_id:
             break
         tokens.append(token.item())
@@ -54,9 +71,11 @@ def generate(the_prompt, the_model):
 
 def show_chat(the_prompt, previous=""):
     if debug:
-        print("---------------\n")
         print(the_prompt)
-        print("---------------\n")
+        print("-" * 80)
+
+    st.session_state["generating_response"] = True
+
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
         response = previous
@@ -66,6 +85,7 @@ def show_chat(the_prompt, previous=""):
             message_placeholder.markdown(response + "▌")
 
         message_placeholder.markdown(response)
+        st.session_state["generating_response"] = False
 
     st.session_state.messages.append({"role": "assistant", "content": response})
 
@@ -75,6 +95,16 @@ def remove_last_occurrence_in_array(array_of_dicts, criteria):
         if criteria(array_of_dicts[i]):
             del array_of_dicts[i]
             break
+
+
+def build_memory_prompt():
+    mem = ""
+    if len(st.session_state.messages) > 2:
+        mem += "\n\n##START_PREVIOUS_DISCUSSION## (do not repeat it in chat but use it as context)"
+        for msg in st.session_state.messages[1:-1]:
+            mem += f"\n{'ME' if msg['role'] == 'assistant' else 'USER'}:\n{msg['content'].strip()}\n"
+        mem += "##END_PREVIOUS_DISCUSSION##\n"
+    return mem
 
 
 if "messages" not in st.session_state:
@@ -87,34 +117,32 @@ if prompt := st.chat_input():
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
 
-    full_prompt = f"<|im_start|>system\n{prompt_sys}\n"
+    prompt_sys_with_memory = system_prompt + build_memory_prompt()
 
-    if len(st.session_state.messages) > 2:
-        full_prompt += f"##START_PREVIOUS_DISCUSSION## (do not repeat it in chat but use it as context)\n"
-        for msg in st.session_state.messages[1:-1]:
-            full_prompt += f"{'ME' if msg['role'] == 'assistant' else 'USER'}:\n\n{msg['content']}\n\n"
-        full_prompt += f"##END_PREVIOUS_DISCUSSION##\n\n"
+    full_prompt = tokenizer.apply_chat_template([
+        {"role": "system", "content": prompt_sys_with_memory},
+        {"role": "user", "content": prompt},
+    ], tokenize=False, add_generation_prompt=True)
+    full_prompt = full_prompt.rstrip("\n")
 
-    full_prompt += "<|im_end|>\n"
-
-    full_prompt += (f"<|im_start|>user\n{prompt}\n<|im_end|>\n"
-                    f"<|im_start|>assistant\n")
-
+    last_chat_element = st.empty()
     show_chat(full_prompt)
 
 if st.session_state.messages and sum(msg["role"] == "assistant" for msg in st.session_state.messages) > 1:
-    if actions[0].button("Reset", key='reset'):
+    if actions[0].button("😶‍🌫️ Forget", use_container_width=True, disabled=disable_sidebar_inputs,
+                         help="Forget the conversations and starts anew."):
+
         st.session_state.messages = [{"role": "assistant", "content": assistant_greeting}]
         st.rerun()
 
 if st.session_state.messages and sum(msg["role"] == "assistant" for msg in st.session_state.messages) > 1:
-    if actions[1].button("Continue", key='continue'):
+    if actions[1].button("🔂 Continue", use_container_width=True, disabled=disable_sidebar_inputs,
+                         help="Continues the generation."):
 
         user_prompts = [msg["content"] for msg in st.session_state.messages if msg["role"] == "user"]
         last_prompt = user_prompts[-1] or "Please continue your response."
 
         assistant_responses = [msg["content"] for msg in st.session_state.messages if msg["role"] == "assistant"]
-        remove_last_occurrence_in_array(st.session_state.messages, lambda item: item.get("role") == "assistant")
         last_assistant_response = assistant_responses[-1] if assistant_responses else ""
 
         # remove last line completely, so it is regenerated correctly (in case it stopped mid-word or mid-number)
@@ -123,7 +151,15 @@ if st.session_state.messages and sum(msg["role"] == "assistant" for msg in st.se
             last_assistant_response_lines.pop()
             last_assistant_response = "\n".join(last_assistant_response_lines)
 
-        full_prompt = (f"<|im_start|>user\n{last_prompt}<|im_end|>\n"
-                       f"<|im_start|>assistant\n{last_assistant_response}")
+        full_prompt = tokenizer.apply_chat_template([
+            {"role": "system", "content": system_prompt + build_memory_prompt()},
+            {"role": "user", "content": last_prompt},
+            {"role": "assistant", "content": last_assistant_response},
+        ], tokenize=False, add_generation_prompt=True)
+        full_prompt = full_prompt.rstrip("\n")
+
+        # replace last assistant response from state, as it will be replaced with a continued one
+        # strangely, the chat messages are not refreshed - workaround: click on +/- on the 'context length' field
+        remove_last_occurrence_in_array(st.session_state.messages, lambda msg: msg["role"] == "assistant")
 
         show_chat(full_prompt, last_assistant_response)

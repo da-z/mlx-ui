@@ -1,0 +1,2 @@
+mlx-community/Nous-Hermes-2-Mixtral-8x7B-DPO-4bit
+mlx-community/NeuralBeagle14-7B-4bit-mlx
