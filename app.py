@@ -127,7 +127,7 @@ if st.session_state.messages and sum(msg["role"] == "assistant" for msg in st.se
     if actions[0].button("😶‍🌫️ Forget", use_container_width=True,
                          help="Forget the previous conversations."):
         st.session_state.messages = [{"role": "assistant", "content": assistant_greeting}]
-        # st.rerun()
+        st.rerun()
 
 if st.session_state.messages and sum(msg["role"] == "assistant" for msg in st.session_state.messages) > 1:
     if actions[1].button("🔂 Continue", use_container_width=True,
