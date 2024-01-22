@@ -6,12 +6,12 @@ from mlx_lm import load
 from mlx_lm.utils import generate_step
 
 title = "MLX Chat"
-ver = "0.7.6"
+ver = "0.7.7"
 debug = False
 
 with open('models.txt', 'r') as file:
     model_refs = file.readlines()
-model_refs = [line.strip() for line in model_refs]
+model_refs = {k.strip(): v.strip() for k, v in [line.split("|") for line in model_refs]}
 
 st.set_page_config(
     page_title=title,
@@ -23,7 +23,7 @@ st.title(title)
 
 assistant_greeting = "How may I help you?"
 
-model_ref = st.sidebar.selectbox("model", model_refs,
+model_ref = st.sidebar.selectbox("model", model_refs.keys(), format_func=lambda value: model_refs[value],
                                  help="See https://huggingface.co/mlx-community for more models. Add your favorites "
                                       "to models.txt")
 
@@ -33,7 +33,7 @@ system_prompt = st.sidebar.text_area("system prompt", "You are a helpful AI assi
 context_length = st.sidebar.number_input('context length', value=400, min_value=100, step=100, max_value=32000,
                                          help="how many maximum words to print, roughly")
 
-temperature = st.sidebar.slider('temperature', min_value=0., max_value=1., step=.10, value=.7,
+temperature = st.sidebar.slider('temperature', min_value=0., max_value=1., step=.10, value=.5,
                                 help="lower means less creative but more accurate")
 
 st.sidebar.markdown("---")
@@ -61,6 +61,7 @@ chatml_template = (
     "{{ '<|im_start|>assistant\n' }}"
     "{% endif %}"
 )
+
 
 def generate(the_prompt, the_model):
     tokens = []
@@ -103,14 +104,10 @@ def remove_last_occurrence_in_array(array_of_dicts, criteria):
             break
 
 
-def build_memory_prompt():
-    mem = ""
+def build_memory():
     if len(st.session_state.messages) > 2:
-        mem += "\n\n##START_PREVIOUS_DISCUSSION## (do not repeat it in chat but use it as context)"
-        for msg in st.session_state.messages[1:-1]:
-            mem += f"\n{'ME' if msg['role'] == 'assistant' else 'USER'}:\n{msg['content'].strip()}\n"
-        mem += "##END_PREVIOUS_DISCUSSION##\n"
-    return mem
+        return st.session_state.messages[1:-1]
+    return []
 
 
 for msg in st.session_state.messages:
@@ -120,12 +117,12 @@ if prompt := st.chat_input():
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
 
-    prompt_sys_with_memory = system_prompt + build_memory_prompt()
+    messages = [{"role": "system", "content": system_prompt}]
+    messages += build_memory()
+    messages += [{"role": "user", "content": prompt}]
 
-    full_prompt = tokenizer.apply_chat_template([
-        {"role": "system", "content": prompt_sys_with_memory},
-        {"role": "user", "content": prompt},
-    ], tokenize=False, add_generation_prompt=True, chat_template=chatml_template)
+    full_prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True,
+                                                chat_template=chatml_template)
     full_prompt = full_prompt.rstrip("\n")
 
     last_chat_element = st.empty()
@@ -157,8 +154,8 @@ if st.session_state.messages and sum(msg["role"] == "assistant" for msg in st.se
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": last_prompt},
             {"role": "assistant", "content": last_assistant_response},
-        ], tokenize=False, add_generation_prompt=True, chat_template=chatml_template)
-        full_prompt = full_prompt.rstrip("\n")
+        ], tokenize=False, add_generation_prompt=False, chat_template=chatml_template)
+        full_prompt = full_prompt.rstrip("<|im_end|>\n")
 
         # replace last assistant response from state, as it will be replaced with a continued one
         # strangely, the chat messages are not refreshed - workaround: click on +/- on the 'context length' field
