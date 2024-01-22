@@ -6,7 +6,7 @@ from mlx_lm import load
 from mlx_lm.utils import generate_step
 
 title = "MLX Chat"
-ver = "0.7.5"
+ver = "0.7.6"
 debug = False
 
 with open('models.txt', 'r') as file:
@@ -53,6 +53,14 @@ def load_model(ref):
 
 model, tokenizer = load_model(model_ref)
 
+chatml_template = (
+    "{% for message in messages %}"
+    "{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}"
+    "{% endfor %}"
+    "{% if add_generation_prompt %}"
+    "{{ '<|im_start|>assistant\n' }}"
+    "{% endif %}"
+)
 
 def generate(the_prompt, the_model):
     tokens = []
@@ -117,7 +125,7 @@ if prompt := st.chat_input():
     full_prompt = tokenizer.apply_chat_template([
         {"role": "system", "content": prompt_sys_with_memory},
         {"role": "user", "content": prompt},
-    ], tokenize=False, add_generation_prompt=True)
+    ], tokenize=False, add_generation_prompt=True, chat_template=chatml_template)
     full_prompt = full_prompt.rstrip("\n")
 
     last_chat_element = st.empty()
@@ -149,7 +157,7 @@ if st.session_state.messages and sum(msg["role"] == "assistant" for msg in st.se
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": last_prompt},
             {"role": "assistant", "content": last_assistant_response},
-        ], tokenize=False, add_generation_prompt=True)
+        ], tokenize=False, add_generation_prompt=True, chat_template=chatml_template)
         full_prompt = full_prompt.rstrip("\n")
 
         # replace last assistant response from state, as it will be replaced with a continued one
