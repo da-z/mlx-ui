@@ -44,6 +44,9 @@ actions = st.sidebar.columns(2)
 st.sidebar.markdown("---")
 st.sidebar.markdown(f"v{ver} / st {st.__version__}")
 
+# give a bit of time for sidebar widgets to render
+time.sleep(0.05)
+
 if "messages" not in st.session_state:
     st.session_state["messages"] = [{"role": "assistant", "content": assistant_greeting}]
 
