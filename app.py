@@ -6,11 +6,12 @@ from mlx_lm import load
 from mlx_lm.utils import generate_step
 
 title = "MLX Chat"
-ver = "0.7.7"
+ver = "0.7.8"
 debug = False
 
 with open('models.txt', 'r') as file:
-    model_refs = file.readlines()
+    model_refs = [line.strip() for line in file.readlines() if not line.startswith('#')]
+
 model_refs = {k.strip(): v.strip() for k, v in [line.split("|") for line in model_refs]}
 
 st.set_page_config(
@@ -53,6 +54,10 @@ def load_model(ref):
 
 model, tokenizer = load_model(model_ref)
 
+stop_tokens = [0, 1, 2, 32000, 32001]
+stop_tokens += tokenizer.all_special_ids
+stop_tokens = sorted(set(stop_tokens))
+
 chatml_template = (
     "{% for message in messages %}"
     "{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}"
@@ -68,12 +73,15 @@ def generate(the_prompt, the_model):
     skip = 0
     for token, _ in zip(generate_step(mx.array(tokenizer.encode(the_prompt)), the_model, temperature),
                         range(context_length)):
-        if token == tokenizer.eos_token_id:
+
+        if token in stop_tokens:
             break
+
         tokens.append(token.item())
-        s = tokenizer.decode(tokens)
-        yield s[skip:]
-        skip = len(s)
+        full_response = tokenizer.decode(tokens)
+
+        yield full_response[skip:]
+        skip = len(full_response)
 
 
 def show_chat(the_prompt, previous=""):

@@ -6,6 +6,8 @@ if [ -d venv ]; then
     rm -rf venv
 fi
 
+pip3 install --upgrade pip
+
 # create virtual env
 pip3 install virtualenv
 python3 -m virtualenv venv
@@ -14,10 +16,9 @@ python3 -m virtualenv venv
 . ./venv/bin/activate
 
 # install deps
-pip3 install mlx \
+pip3 install \
     mlx-lm \
     streamlit \
-    autopep8 \
     watchdog \
 
 pip3 freeze > requirements.txt
