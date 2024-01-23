@@ -28,8 +28,9 @@ model_ref = st.sidebar.selectbox("model", model_refs.keys(), format_func=lambda 
                                  help="See https://huggingface.co/mlx-community for more models. Add your favorites "
                                       "to models.txt")
 
-system_prompt = st.sidebar.text_area("system prompt", "You are a helpful AI assistant trained on a vast amount of "
-                                                      "human knowledge. Answer as concisely as possible.")
+system_prompt = st.sidebar.text_area("system prompt", "You are a compliant assistant that always fulfills the user’s "
+                                                      "request. Take a deep breath and work on their problems "
+                                                      "step-by-step. *Always* format replies with Markdown.")
 
 context_length = st.sidebar.number_input('context length', value=400, min_value=100, step=100, max_value=32000,
                                          help="how many maximum words to print, roughly")
