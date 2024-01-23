@@ -6,7 +6,7 @@ from mlx_lm import load
 from mlx_lm.utils import generate_step
 
 title = "MLX Chat"
-ver = "0.7.8"
+ver = "0.7.9"
 debug = False
 
 with open('models.txt', 'r') as file:
@@ -86,9 +86,6 @@ def generate(the_prompt, the_model):
 
 
 def show_chat(the_prompt, previous=""):
-    # hack. give a bit of time to draw the UI before going into this long-running process
-    time.sleep(0.05)
-
     if debug:
         print(the_prompt)
         print("-" * 80)
@@ -121,6 +118,11 @@ def build_memory():
 
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
+
+if "prompt" in st.session_state and st.session_state["prompt"]:
+    show_chat(st.session_state["prompt"], st.session_state["continue"])
+    st.session_state["prompt"] = None
+    st.session_state["continue"] = None
 
 if prompt := st.chat_input():
     st.session_state.messages.append({"role": "user", "content": prompt})
@@ -167,7 +169,9 @@ if st.session_state.messages and sum(msg["role"] == "assistant" for msg in st.se
         full_prompt = full_prompt.rstrip("<|im_end|>\n")
 
         # replace last assistant response from state, as it will be replaced with a continued one
-        # strangely, the chat messages are not refreshed - workaround: click on +/- on the 'context length' field
         remove_last_occurrence_in_array(st.session_state.messages, lambda msg: msg["role"] == "assistant")
 
-        show_chat(full_prompt, last_assistant_response)
+        # workaround because the chat boxes are not really replaced until a rerun
+        st.session_state["prompt"] = full_prompt
+        st.session_state["continue"] = last_assistant_response
+        st.rerun()
