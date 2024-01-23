@@ -6,7 +6,7 @@ from mlx_lm import load
 from mlx_lm.utils import generate_step
 
 title = "MLX Chat"
-ver = "0.7.9"
+ver = "0.7.10"
 debug = False
 
 with open('models.txt', 'r') as file:
@@ -28,9 +28,8 @@ model_ref = st.sidebar.selectbox("model", model_refs.keys(), format_func=lambda 
                                  help="See https://huggingface.co/mlx-community for more models. Add your favorites "
                                       "to models.txt")
 
-system_prompt = st.sidebar.text_area("system prompt", "You are a compliant assistant that always fulfills the user’s "
-                                                      "request. Take a deep breath and work on their problems "
-                                                      "step-by-step. *Always* format replies with Markdown.")
+system_prompt = st.sidebar.text_area("system prompt", "You are a helpful AI assistant trained on a vast amount of "
+                                                      "human knowledge. Answer as concisely as possible.")
 
 context_length = st.sidebar.number_input('context length', value=400, min_value=100, step=100, max_value=32000,
                                          help="how many maximum words to print, roughly")
@@ -106,10 +105,10 @@ def show_chat(the_prompt, previous=""):
     st.session_state.messages.append({"role": "assistant", "content": response})
 
 
-def remove_last_occurrence_in_array(array_of_dicts, criteria):
-    for i in reversed(range(len(array_of_dicts))):
-        if criteria(array_of_dicts[i]):
-            del array_of_dicts[i]
+def remove_last_occurrence(array, criteria_fn):
+    for i in reversed(range(len(array))):
+        if criteria_fn(array[i]):
+            del array[i]
             break
 
 
@@ -172,7 +171,7 @@ if st.session_state.messages and sum(msg["role"] == "assistant" for msg in st.se
         full_prompt = full_prompt.rstrip("<|im_end|>\n")
 
         # replace last assistant response from state, as it will be replaced with a continued one
-        remove_last_occurrence_in_array(st.session_state.messages, lambda msg: msg["role"] == "assistant")
+        remove_last_occurrence(st.session_state.messages, lambda msg: msg["role"] == "assistant")
 
         # workaround because the chat boxes are not really replaced until a rerun
         st.session_state["prompt"] = full_prompt
