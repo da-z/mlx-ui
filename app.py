@@ -6,7 +6,7 @@ from mlx_lm import load
 from mlx_lm.utils import generate_step
 
 title = "MLX Chat"
-ver = "0.7.10"
+ver = "0.7.11"
 debug = False
 
 with open('models.txt', 'r') as file:
@@ -118,17 +118,47 @@ def build_memory():
     return []
 
 
-for msg in st.session_state.messages:
-    st.chat_message(msg["role"]).write(msg["content"])
+def queue_chat(the_prompt, continuation=""):
+    # workaround because the chat boxes are not really replaced until a rerun
+    st.session_state["prompt"] = the_prompt
+    st.session_state["continuation"] = continuation
+    st.rerun()
 
-if "prompt" in st.session_state and st.session_state["prompt"]:
-    show_chat(st.session_state["prompt"], st.session_state["continue"])
-    st.session_state["prompt"] = None
-    st.session_state["continue"] = None
+
+if actions[0].button("😶‍🌫️ Forget", use_container_width=True,
+                     help="Forget the previous conversations."):
+    st.session_state.messages = [{"role": "assistant", "content": assistant_greeting}]
+    st.rerun()
+
+if actions[1].button("🔂 Continue", use_container_width=True,
+                     help="Continue the generation."):
+
+    user_prompts = [msg["content"] for msg in st.session_state.messages if msg["role"] == "user"]
+    last_prompt = user_prompts[-1] or "Please continue your response."
+
+    assistant_responses = [msg["content"] for msg in st.session_state.messages if msg["role"] == "assistant"]
+    last_assistant_response = assistant_responses[-1] if assistant_responses else ""
+
+    # remove last line completely, so it is regenerated correctly (in case it stopped mid-word or mid-number)
+    last_assistant_response_lines = last_assistant_response.split('\n')
+    if len(last_assistant_response_lines) > 1:
+        last_assistant_response_lines.pop()
+        last_assistant_response = "\n".join(last_assistant_response_lines)
+
+    full_prompt = tokenizer.apply_chat_template([
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": last_prompt},
+        {"role": "assistant", "content": last_assistant_response},
+    ], tokenize=False, add_generation_prompt=False, chat_template=chatml_template)
+    full_prompt = full_prompt.rstrip("<|im_end|>\n")
+
+    # replace last assistant response from state, as it will be replaced with a continued one
+    remove_last_occurrence(st.session_state.messages, lambda msg: msg["role"] == "assistant")
+
+    queue_chat(full_prompt, last_assistant_response)
 
 if prompt := st.chat_input():
     st.session_state.messages.append({"role": "user", "content": prompt})
-    st.chat_message("user").write(prompt)
 
     messages = [{"role": "system", "content": system_prompt}]
     messages += build_memory()
@@ -138,42 +168,12 @@ if prompt := st.chat_input():
                                                 chat_template=chatml_template)
     full_prompt = full_prompt.rstrip("\n")
 
-    last_chat_element = st.empty()
-    show_chat(full_prompt)
+    queue_chat(full_prompt)
 
-if st.session_state.messages and sum(msg["role"] == "assistant" for msg in st.session_state.messages) > 1:
-    if actions[0].button("😶‍🌫️ Forget", use_container_width=True,
-                         help="Forget the previous conversations."):
-        st.session_state.messages = [{"role": "assistant", "content": assistant_greeting}]
-        st.rerun()
+for msg in st.session_state.messages:
+    st.chat_message(msg["role"]).write(msg["content"])
 
-if st.session_state.messages and sum(msg["role"] == "assistant" for msg in st.session_state.messages) > 1:
-    if actions[1].button("🔂 Continue", use_container_width=True,
-                         help="Continue the generation."):
-
-        user_prompts = [msg["content"] for msg in st.session_state.messages if msg["role"] == "user"]
-        last_prompt = user_prompts[-1] or "Please continue your response."
-
-        assistant_responses = [msg["content"] for msg in st.session_state.messages if msg["role"] == "assistant"]
-        last_assistant_response = assistant_responses[-1] if assistant_responses else ""
-
-        # remove last line completely, so it is regenerated correctly (in case it stopped mid-word or mid-number)
-        last_assistant_response_lines = last_assistant_response.split('\n')
-        if len(last_assistant_response_lines) > 1:
-            last_assistant_response_lines.pop()
-            last_assistant_response = "\n".join(last_assistant_response_lines)
-
-        full_prompt = tokenizer.apply_chat_template([
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": last_prompt},
-            {"role": "assistant", "content": last_assistant_response},
-        ], tokenize=False, add_generation_prompt=False, chat_template=chatml_template)
-        full_prompt = full_prompt.rstrip("<|im_end|>\n")
-
-        # replace last assistant response from state, as it will be replaced with a continued one
-        remove_last_occurrence(st.session_state.messages, lambda msg: msg["role"] == "assistant")
-
-        # workaround because the chat boxes are not really replaced until a rerun
-        st.session_state["prompt"] = full_prompt
-        st.session_state["continue"] = last_assistant_response
-        st.rerun()
+if "prompt" in st.session_state and st.session_state["prompt"]:
+    show_chat(st.session_state["prompt"], st.session_state["continuation"])
+    st.session_state["prompt"] = None
+    st.session_state["continuation"] = None
