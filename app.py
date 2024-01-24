@@ -2,11 +2,10 @@ import time
 
 import mlx.core as mx
 import streamlit as st
-from mlx_lm import load
-from mlx_lm.utils import generate_step
+from mlx_lm.utils import load, generate_step
 
 title = "MLX Chat"
-ver = "0.7.12"
+ver = "0.7.14"
 debug = False
 
 with open('models.txt', 'r') as file:
@@ -51,11 +50,11 @@ if "messages" not in st.session_state:
 
 
 @st.cache_resource(show_spinner=True)
-def load_model(ref):
+def load_model_and_cache(ref):
     return load(ref)
 
 
-model, tokenizer = load_model(model_ref)
+model, tokenizer = load_model_and_cache(model_ref)
 
 stop_tokens = [0, 1, 2, 32000, 32001]
 stop_tokens += tokenizer.all_special_ids
@@ -74,8 +73,9 @@ chatml_template = (
 def generate(the_prompt, the_model):
     tokens = []
     skip = 0
-    for token, _ in zip(generate_step(mx.array(tokenizer.encode(the_prompt)), the_model, temperature),
-                        range(context_length)):
+
+    for (token, prob), n in zip(generate_step(mx.array(tokenizer.encode(the_prompt)), the_model, temperature),
+                                range(context_length)):
 
         if token in stop_tokens:
             break
@@ -159,7 +159,7 @@ if actions[1].button("🔂 Continue", use_container_width=True,
         ], tokenize=False, add_generation_prompt=False, chat_template=chatml_template)
         full_prompt = full_prompt.rstrip("<|im_end|>\n")
 
-        # replace last assistant response from state, as it will be replaced with a continued one
+        # remove last assistant response from state, as it will be replaced with a continued one
         remove_last_occurrence(st.session_state.messages,
                                lambda msg: msg["role"] == "assistant" and msg["content"] != assistant_greeting)
 
