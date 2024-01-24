@@ -15,10 +15,25 @@ python3 -m virtualenv venv
 # activate virtual env
 . ./venv/bin/activate
 
-# install deps
-pip3 install \
-    mlx-lm \
-    streamlit \
-    watchdog \
+if [ "$1" == "refresh" ]; then
 
-pip3 freeze > requirements.txt
+  echo 'refreshing requirements'
+
+  # install deps
+  pip3 install \
+      mlx-lm \
+      streamlit \
+      watchdog \
+
+  pip3 freeze > requirements.txt
+
+else
+
+  echo 'installing requirements'
+
+  # install deps
+  pip3 install -r requirements.txt
+
+fi
+
+echo 'installation complete'

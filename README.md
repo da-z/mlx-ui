@@ -8,6 +8,12 @@ A hackish frontend for mlx-lm.
 $ ./install.sh
 ```
 
+Or to install using latest versions of the libs (may break functionality):
+
+```shell
+$ ./install.sh refresh
+```
+
 ## Run
 
 ```shell
