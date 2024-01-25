@@ -1,4 +1,4 @@
 # mlx-community/TinyDolphin-2.8-1.1b-4bit-mlx             | 🐬 TinyDolphin 2.8 1B Q4 (tiny)
-mlx-community/NeuralBeagle14-7B-4bit-mlx                | 🦮 NeuralBeagle14 7B Q4 (small)
 mlx-community/dolphin-2.6-mistral-7b-dpo-laser-4bit-mlx | 🐬 Dolphin 2.6 Mistral 7B DPO Laser Q4 (small)
+mlx-community/NeuralBeagle14-7B-4bit-mlx                | 🦮 NeuralBeagle14 7B Q4 (small)
 mlx-community/Nous-Hermes-2-Mixtral-8x7B-DPO-4bit       | 🧙 Nous Hermes 2 Mixtral 8x7B DPO Q4 (medium)
