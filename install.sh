@@ -2,38 +2,37 @@
 
 # remove existing virtual env
 if [ -d venv ]; then
-    echo 'recreating virtual env'
+    echo '⏳ Recreating virtual env..'
     rm -rf venv
 fi
 
-pip3 install --upgrade pip
-
 # create virtual env
-pip3 install virtualenv
+python3 -m pip install virtualenv
 python3 -m virtualenv venv
 
 # activate virtual env
 . ./venv/bin/activate
 
-if [ "$1" == "refresh" ]; then
+if [ "$1" = "refresh" ]; then
 
-  echo 'refreshing requirements'
+  echo '⏳ Refreshing requirements..'
 
   # install deps
-  pip3 install \
+  pip install \
       mlx-lm \
       streamlit \
       watchdog \
 
-  pip3 freeze > requirements.txt
+  pip freeze > requirements.txt
 
 else
 
-  echo 'installing requirements'
+  echo '⏳ Installing requirements..'
 
   # install deps
-  pip3 install -r requirements.txt
+  echo '⏳ Installing requirements..'
+  pip install -r requirements.txt
 
 fi
 
-echo 'installation complete'
+echo '✅ Installation complete. You can use ./run.sh to launch the app'
