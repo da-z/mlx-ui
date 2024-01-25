@@ -105,7 +105,7 @@ def show_chat(the_prompt, previous=""):
 
             if not previous:
                 # begin neural-beagle-14 fixes
-                response = re.sub(r"^/{1,}\*{1,}/", "", response)
+                response = re.sub(r"^/\*+/", "", response)
                 response = re.sub(r"^:+", "", response)
                 # end neural-beagle-14 fixes
 
