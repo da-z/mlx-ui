@@ -5,7 +5,7 @@ import streamlit as st
 from mlx_lm.utils import load, generate_step
 
 title = "MLX Chat"
-ver = "0.7.14"
+ver = "0.7.15"
 debug = False
 
 with open('models.txt', 'r') as file:
@@ -60,6 +60,8 @@ stop_tokens = [0, 1, 2, 32000, 32001]
 stop_tokens += tokenizer.all_special_ids
 stop_tokens = sorted(set(stop_tokens))
 
+stop_words = ["<|im_end|>", "</s>"]
+
 chatml_template = (
     "{% for message in messages %}"
     "{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}"
@@ -81,10 +83,15 @@ def generate(the_prompt, the_model):
             break
 
         tokens.append(token.item())
-        full_response = tokenizer.decode(tokens)
+        text = tokenizer.decode(tokens)
 
-        yield full_response[skip:]
-        skip = len(full_response)
+        for sw in stop_words:
+            if text.endswith(sw):
+                yield text[skip:], len(sw)
+                return
+
+        yield text[skip:], None
+        skip = len(text)
 
 
 def show_chat(the_prompt, previous=""):
@@ -92,13 +99,26 @@ def show_chat(the_prompt, previous=""):
         print(the_prompt)
         print("-" * 80)
 
-    with st.chat_message("assistant"):
+    with (st.chat_message("assistant")):
         message_placeholder = st.empty()
         response = previous
 
-        for chunk in generate(the_prompt, model):
-            response = (response + chunk).replace('�', '')
-            message_placeholder.markdown(response + "▌")
+        buffer = ""
+        for chunk, trim in generate(the_prompt, model):
+            if buffer:
+                message_placeholder.markdown(response + "▌")
+
+            response = response + chunk
+
+            if response.startswith(": "):  # NeuralBeagle fix
+                response = response[2:]
+
+            if trim:
+                response = response[:-trim]
+
+            response = response.replace('�', '')
+
+            buffer = response
 
         message_placeholder.markdown(response)
 
