@@ -111,7 +111,6 @@ def show_chat(the_prompt, previous=""):
 
             if trim:
                 response = response[:-trim].strip()
-                print("trimmed: " + response)
 
             response = response.replace('�', '')
             message_placeholder.markdown(response + "▌")
