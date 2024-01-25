@@ -1,3 +1,4 @@
+import re
 import time
 
 import mlx.core as mx
@@ -5,7 +6,7 @@ import streamlit as st
 from mlx_lm.utils import load, generate_step
 
 title = "MLX Chat"
-ver = "0.7.15"
+ver = "0.7.16"
 debug = False
 
 with open('models.txt', 'r') as file:
@@ -56,10 +57,6 @@ def load_model_and_cache(ref):
 
 model, tokenizer = load_model_and_cache(model_ref)
 
-stop_tokens = [0, 1, 2, 32000, 32001]
-stop_tokens += tokenizer.all_special_ids
-stop_tokens = sorted(set(stop_tokens))
-
 stop_words = ["<|im_end|>", "</s>"]
 
 chatml_template = (
@@ -79,7 +76,7 @@ def generate(the_prompt, the_model):
     for (token, prob), n in zip(generate_step(mx.array(tokenizer.encode(the_prompt)), the_model, temperature),
                                 range(context_length)):
 
-        if token in stop_tokens:
+        if token == tokenizer.eos_token_id:
             break
 
         tokens.append(token.item())
@@ -99,26 +96,25 @@ def show_chat(the_prompt, previous=""):
         print(the_prompt)
         print("-" * 80)
 
-    with (st.chat_message("assistant")):
+    with ((st.chat_message("assistant"))):
         message_placeholder = st.empty()
         response = previous
 
-        buffer = ""
         for chunk, trim in generate(the_prompt, model):
-            if buffer:
-                message_placeholder.markdown(response + "▌")
-
             response = response + chunk
 
-            if response.startswith(": "):  # NeuralBeagle fix
-                response = response[2:]
+            if not previous:
+                # begin neural-beagle-14 fixes
+                response = re.sub(r"^/{1,}\*{1,}/", "", response)
+                response = re.sub(r"^:+", "", response)
+                # end neural-beagle-14 fixes
 
             if trim:
-                response = response[:-trim]
+                response = response[:-trim].strip()
+                print("trimmed: " + response)
 
             response = response.replace('�', '')
-
-            buffer = response
+            message_placeholder.markdown(response + "▌")
 
         message_placeholder.markdown(response)
 
@@ -200,6 +196,9 @@ if prompt := st.chat_input():
 
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
+
+# give a bit of time for messages to render
+time.sleep(0.05)
 
 if "prompt" in st.session_state and st.session_state["prompt"]:
     show_chat(st.session_state["prompt"], st.session_state["continuation"])
