@@ -6,8 +6,10 @@ import streamlit as st
 from mlx_lm.utils import load, generate_step
 
 title = "MLX Chat"
-ver = "0.7.16"
+ver = "0.7.17"
 debug = False
+
+assistant_greeting = "How may I help you?"
 
 with open('models.txt', 'r') as file:
     model_refs = [line.strip() for line in file.readlines() if not line.startswith('#')]
@@ -22,7 +24,7 @@ st.set_page_config(
 )
 st.title(title)
 
-assistant_greeting = "How may I help you?"
+st.markdown(r"<style>.stDeployButton{display:none}</style>", unsafe_allow_html=True)
 
 model_ref = st.sidebar.selectbox("model", model_refs.keys(), format_func=lambda value: model_refs[value],
                                  help="See https://huggingface.co/mlx-community for more models. Add your favorites "
