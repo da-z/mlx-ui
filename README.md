@@ -2,7 +2,7 @@
 
 A hackish frontend for mlx-lm.
 
-![](/Users/andrei/dev/mlx-ui/screenshot.png)
+![](screenshot.png)
 
 ## Install
 
