@@ -2,6 +2,8 @@
 
 A hackish frontend for mlx-lm.
 
+![](/Users/andrei/dev/mlx-ui/screenshot.png)
+
 ## Install
 
 ```shell
@@ -12,6 +14,14 @@ Or to install using latest versions of the libs (may break functionality):
 
 ```shell
 $ ./install.sh refresh
+```
+
+## Update
+
+After fetching a newer version it's recommended to run again the installation script.
+
+```shell
+$ ./install.sh
 ```
 
 ## Run

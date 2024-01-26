@@ -6,7 +6,7 @@ import streamlit as st
 from mlx_lm.utils import load, generate_step
 
 title = "MLX Chat"
-ver = "0.7.17"
+ver = "0.7.18"
 debug = False
 
 assistant_greeting = "How may I help you?"
@@ -54,14 +54,14 @@ if "messages" not in st.session_state:
 
 @st.cache_resource(show_spinner=True)
 def load_model_and_cache(ref):
-    return load(ref)
+    return load(ref, {"trust_remote_code": True})
 
 
 model, tokenizer = load_model_and_cache(model_ref)
 
-stop_words = ["<|im_end|>", "</s>"]
+stop_words = ["<|im_end|>", "<|im_start|>", "</s>"]
 
-chatml_template = (
+chatml_template = tokenizer.chat_template or (
     "{% for message in messages %}"
     "{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}"
     "{% endfor %}"
@@ -174,7 +174,7 @@ if actions[1].button("🔂 Continue", use_container_width=True,
             {"role": "user", "content": last_user_prompt},
             {"role": "assistant", "content": last_assistant_response},
         ], tokenize=False, add_generation_prompt=False, chat_template=chatml_template)
-        full_prompt = full_prompt.rstrip("<|im_end|>\n")
+        full_prompt = full_prompt.rstrip("\n")
 
         # remove last assistant response from state, as it will be replaced with a continued one
         remove_last_occurrence(st.session_state.messages,

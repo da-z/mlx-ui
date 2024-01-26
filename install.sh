@@ -20,6 +20,7 @@ if [ "$1" = "refresh" ]; then
   # install deps
   pip install \
       mlx-lm \
+      tiktoken \
       streamlit \
       watchdog \
 
