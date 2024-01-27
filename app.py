@@ -26,9 +26,11 @@ st.title(title)
 
 st.markdown(r"<style>.stDeployButton{display:none}</style>", unsafe_allow_html=True)
 
+
 @st.cache_resource(show_spinner=True)
 def load_model_and_cache(ref):
     return load(ref, {"trust_remote_code": True})
+
 
 model_ref = st.sidebar.selectbox("model", model_refs.keys(), format_func=lambda value: model_refs[value],
                                  help="See https://huggingface.co/mlx-community for more models. Add your favorites "
@@ -56,7 +58,6 @@ time.sleep(0.05)
 
 if "messages" not in st.session_state:
     st.session_state["messages"] = [{"role": "assistant", "content": assistant_greeting}]
-
 
 chatml_template = tokenizer.chat_template or (
     "{% for message in messages %}"
