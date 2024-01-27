@@ -6,7 +6,7 @@ import streamlit as st
 from mlx_lm.utils import load, generate_step
 
 title = "MLX Chat"
-ver = "0.7.18"
+ver = "0.7.19"
 debug = False
 
 assistant_greeting = "How may I help you?"
@@ -26,9 +26,15 @@ st.title(title)
 
 st.markdown(r"<style>.stDeployButton{display:none}</style>", unsafe_allow_html=True)
 
+@st.cache_resource(show_spinner=True)
+def load_model_and_cache(ref):
+    return load(ref, {"trust_remote_code": True})
+
 model_ref = st.sidebar.selectbox("model", model_refs.keys(), format_func=lambda value: model_refs[value],
                                  help="See https://huggingface.co/mlx-community for more models. Add your favorites "
                                       "to models.txt")
+
+model, tokenizer = load_model_and_cache(model_ref)
 
 system_prompt = st.sidebar.text_area("system prompt", "You are a helpful AI assistant trained on a vast amount of "
                                                       "human knowledge. Answer as concisely as possible.")
@@ -52,15 +58,6 @@ if "messages" not in st.session_state:
     st.session_state["messages"] = [{"role": "assistant", "content": assistant_greeting}]
 
 
-@st.cache_resource(show_spinner=True)
-def load_model_and_cache(ref):
-    return load(ref, {"trust_remote_code": True})
-
-
-model, tokenizer = load_model_and_cache(model_ref)
-
-stop_words = ["<|im_end|>", "<|im_start|>", "</s>"]
-
 chatml_template = tokenizer.chat_template or (
     "{% for message in messages %}"
     "{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}"
@@ -69,6 +66,8 @@ chatml_template = tokenizer.chat_template or (
     "{{ '<|im_start|>assistant\n' }}"
     "{% endif %}"
 )
+
+stop_words = ["<|im_start|>", "<|im_end|>", "<s>", "</s>"]
 
 
 def generate(the_prompt, the_model):
@@ -84,12 +83,20 @@ def generate(the_prompt, the_model):
         tokens.append(token.item())
         text = tokenizer.decode(tokens)
 
-        for sw in stop_words:
-            if text.endswith(sw):
-                yield text[skip:], len(sw)
-                return
+        trim = None
 
-        yield text[skip:], None
+        for sw in stop_words:
+            if text[-len(sw):].lower() == sw:
+                # definitely ends with a stop word. stop generating
+                return
+            else:
+                # if text ends with start of an end word, accumulate tokens and wait for the full word
+                for i, _ in enumerate(sw, start=1):
+                    if text[-i:].lower() == sw[:i]:
+                        trim = -i
+
+        # flush text up till trim point (beginning of stop word)
+        yield text[skip:trim]
         skip = len(text)
 
 
@@ -102,7 +109,7 @@ def show_chat(the_prompt, previous=""):
         message_placeholder = st.empty()
         response = previous
 
-        for chunk, trim in generate(the_prompt, model):
+        for chunk in generate(the_prompt, model):
             response = response + chunk
 
             if not previous:
@@ -110,9 +117,6 @@ def show_chat(the_prompt, previous=""):
                 response = re.sub(r"^/\*+/", "", response)
                 response = re.sub(r"^:+", "", response)
                 # end neural-beagle-14 fixes
-
-            if trim:
-                response = response[:-trim].strip()
 
             response = response.replace('�', '')
             message_placeholder.markdown(response + "▌")
