@@ -1,6 +1,6 @@
 # MLX Chat
 
-A hackish frontend for mlx-lm.
+A simple UI / Web / Frontend for MLX mlx-lm using Streamlit.
 
 ![](screenshot.png)
 
