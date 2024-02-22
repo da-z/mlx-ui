@@ -38,8 +38,19 @@ model_ref = st.sidebar.selectbox("model", model_refs.keys(), format_func=lambda 
 
 model, tokenizer = load_model_and_cache(model_ref)
 
+chat_template = tokenizer.chat_template or (
+    "{% for message in messages %}"
+    "{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}"
+    "{% endfor %}"
+    "{% if add_generation_prompt %}"
+    "{{ '<|im_start|>assistant\n' }}"
+    "{% endif %}"
+)
+supports_system_role = "system role not supported" not in chat_template.lower()
+
 system_prompt = st.sidebar.text_area("system prompt", "You are a helpful AI assistant trained on a vast amount of "
-                                                      "human knowledge. Answer as concisely as possible.")
+                                                      "human knowledge. Answer as concisely as possible.",
+                                     disabled=not supports_system_role)
 
 context_length = st.sidebar.number_input('context length', value=400, min_value=100, step=100, max_value=32000,
                                          help="how many maximum words to print, roughly")
@@ -58,15 +69,6 @@ time.sleep(0.05)
 
 if "messages" not in st.session_state:
     st.session_state["messages"] = [{"role": "assistant", "content": assistant_greeting}]
-
-chatml_template = tokenizer.chat_template or (
-    "{% for message in messages %}"
-    "{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}"
-    "{% endfor %}"
-    "{% if add_generation_prompt %}"
-    "{{ '<|im_start|>assistant\n' }}"
-    "{% endif %}"
-)
 
 stop_words = ["<|im_start|>", "<|im_end|>", "<s>", "</s>"]
 
@@ -174,11 +176,17 @@ if actions[1].button("🔂 Continue", use_container_width=True,
             last_assistant_response_lines.pop()
             last_assistant_response = "\n".join(last_assistant_response_lines)
 
-        full_prompt = tokenizer.apply_chat_template([
-            {"role": "system", "content": system_prompt},
+        messages = [
             {"role": "user", "content": last_user_prompt},
             {"role": "assistant", "content": last_assistant_response},
-        ], tokenize=False, add_generation_prompt=False, chat_template=chatml_template)
+        ]
+        if supports_system_role:
+            messages.insert(0, {"role": "system", "content": system_prompt})
+
+        full_prompt = tokenizer.apply_chat_template(messages,
+                                                    tokenize=False,
+                                                    add_generation_prompt=False,
+                                                    chat_template=chat_template)
         full_prompt = full_prompt.rstrip("\n")
 
         # remove last assistant response from state, as it will be replaced with a continued one
@@ -190,12 +198,14 @@ if actions[1].button("🔂 Continue", use_container_width=True,
 if prompt := st.chat_input():
     st.session_state.messages.append({"role": "user", "content": prompt})
 
-    messages = [{"role": "system", "content": system_prompt}]
+    messages = []
+    if supports_system_role:
+        messages += [{"role": "system", "content": system_prompt}]
     messages += build_memory()
     messages += [{"role": "user", "content": prompt}]
 
     full_prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True,
-                                                chat_template=chatml_template)
+                                                chat_template=chat_template)
     full_prompt = full_prompt.rstrip("\n")
 
     queue_chat(full_prompt)
