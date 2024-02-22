@@ -19,7 +19,7 @@ markdown-it-py==3.0.0
 MarkupSafe==2.1.5
 mdurl==0.1.2
 mlx==0.3.0
-mlx-lm==0.0.10
+mlx-lm==0.0.13
 numpy==1.26.4
 packaging==23.2
 pandas==2.2.0
@@ -47,11 +47,11 @@ toml==0.10.2
 toolz==0.12.1
 tornado==6.4
 tqdm==4.66.2
-transformers==4.37.2
+transformers==4.38.1
 typing_extensions==4.9.0
 tzdata==2024.1
 tzlocal==5.2
-urllib3==2.2.0
+urllib3==2.2.1
 validators==0.22.0
 watchdog==4.0.0
 zipp==3.17.0
