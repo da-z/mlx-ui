@@ -6,7 +6,7 @@ import streamlit as st
 from mlx_lm.utils import load, generate_step
 
 title = "MLX Chat"
-ver = "0.7.20"
+ver = "0.7.21"
 debug = False
 
 assistant_greeting = "How may I help you?"
