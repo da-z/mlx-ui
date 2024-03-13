@@ -18,7 +18,7 @@ markdown-it-py==3.0.0
 MarkupSafe==2.1.5
 mdurl==0.1.2
 mlx==0.6.0
-mlx-lm==0.1.0
+mlx-lm==0.2.0
 numpy==1.26.4
 packaging==23.2
 pandas==2.2.1
@@ -38,7 +38,7 @@ rpds-py==0.18.0
 safetensors==0.4.2
 six==1.16.0
 smmap==5.0.1
-streamlit==1.32.0
+streamlit==1.32.1
 tenacity==8.2.3
 tiktoken==0.6.0
 tokenizers==0.15.2
