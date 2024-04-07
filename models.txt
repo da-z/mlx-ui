@@ -6,3 +6,4 @@ mlx-community/stablelm-2-zephyr-1_6b-4bit               | 🌬️ StableLM 2 Zep
 mlx-community/TinyDolphin-2.8-1.1b-4bit-mlx             | 🐬 TinyDolphin 2.8 1B Q4 (tiny)
 mlx-community/CodeLlama-70b-hf-4bit-MLX                 | 🦙 CodeLlama 70B Q4 (large)
 mlx-community/quantized-gemma-2b-it                     | ✨ Gemma 2B Q4 (tiny)
+mlx-community/c4ai-command-r-plus-4bit                  | ⌘ Command R + Q4 (very large)
