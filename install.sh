@@ -21,6 +21,7 @@ if [ "$1" = "refresh" ]; then
   pip install \
       mlx-lm \
       tiktoken \
+      sentencepiece \
       streamlit \
       watchdog \
 
