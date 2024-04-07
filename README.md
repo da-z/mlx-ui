@@ -29,3 +29,9 @@ $ ./install.sh
 ```shell
 $ ./run.sh
 ```
+
+You can also use a custom model.txt file (see [mlx-community](https://huggingface.co/mlx-community) for more models):
+
+```shell
+$ ./run.sh --models mymodels.txt
+```

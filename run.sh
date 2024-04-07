@@ -1,4 +1,4 @@
 #!/bin/sh
 
 . ./venv/bin/activate
-streamlit run app.py
+streamlit run app.py -- "$@"
