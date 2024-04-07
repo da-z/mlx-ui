@@ -28,8 +28,6 @@ if [ "$1" = "refresh" ]; then
 
 else
 
-  echo '⏳ Installing requirements..'
-
   # install deps
   echo '⏳ Installing requirements..'
   pip install -r requirements.txt
