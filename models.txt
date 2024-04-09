@@ -2,6 +2,7 @@ mlx-community/dolphin-2.6-mistral-7b-dpo-laser-4bit-mlx | 🐬 Dolphin 2.6 Mistr
 mlx-community/dolphin-2.8-mistral-7b-v02-4bit           | 🐬 Dolphin 2.8 Mistral 7B v02 Q4 (small)
 mlx-community/NeuralBeagle14-7B-4bit-mlx                | 🦮 NeuralBeagle14 7B Q4 (small)
 mlx-community/Nous-Hermes-2-Mixtral-8x7B-DPO-4bit       | 🧙 Nous Hermes 2 Mixtral 8x7B DPO Q4 (medium)
+mlx-community/stablelm-2-12b-chat-4bit                  | 🔘 StableLM 2 12B Q4 (small)
 mlx-community/stablelm-2-zephyr-1_6b-4bit               | 🌬️ StableLM 2 Zephyr 1.6B DPO Q4 (tiny)
 mlx-community/TinyDolphin-2.8-1.1b-4bit-mlx             | 🐬 TinyDolphin 2.8 1B Q4 (tiny)
 mlx-community/CodeLlama-70b-hf-4bit-MLX                 | 🦙 CodeLlama 70B Q4 (large)
