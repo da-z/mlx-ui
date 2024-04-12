@@ -90,7 +90,7 @@ def generate(the_prompt, the_model):
         if token == tokenizer.eos_token_id:
             break
 
-        tokens.append(token.item())
+        tokens.append(token)
         text = tokenizer.decode(tokens)
 
         trim = None
