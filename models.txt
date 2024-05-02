@@ -1,3 +1,4 @@
+- | Choose a model
 mlx-community/dolphin-2.6-mistral-7b-dpo-laser-4bit-mlx | 🐬 Dolphin 2.6 Mistral 7B DPO Laser Q4 (small)
 mlx-community/dolphin-2.8-mistral-7b-v02-4bit           | 🐬 Dolphin 2.8 Mistral 7B v02 Q4 (small)
 mlx-community/Meta-Llama-3-8B-Instruct-4bit             | 🦙 Llama3 8B Q4 (small)

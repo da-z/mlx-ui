@@ -7,7 +7,7 @@ from mlx_lm.utils import load, generate_step
 import argparse
 
 title = "MLX Chat"
-ver = "0.7.22"
+ver = "0.7.23"
 debug = False
 
 # tx @cocktailpeanut
@@ -39,34 +39,37 @@ def load_model_and_cache(ref):
     return load(ref, {"trust_remote_code": True})
 
 
+model = None
+
 model_ref = st.sidebar.selectbox("model", model_refs.keys(), format_func=lambda value: model_refs[value],
                                  help="See https://huggingface.co/mlx-community for more models. Add your favorites "
                                       "to models.txt")
 
-model, tokenizer = load_model_and_cache(model_ref)
+if model_ref.strip() is not "-":
+    model, tokenizer = load_model_and_cache(model_ref)
 
-chat_template = tokenizer.chat_template or (
-    "{% for message in messages %}"
-    "{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}"
-    "{% endfor %}"
-    "{% if add_generation_prompt %}"
-    "{{ '<|im_start|>assistant\n' }}"
-    "{% endif %}"
-)
-supports_system_role = "system role not supported" not in chat_template.lower()
+    chat_template = tokenizer.chat_template or (
+        "{% for message in messages %}"
+        "{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}"
+        "{% endfor %}"
+        "{% if add_generation_prompt %}"
+        "{{ '<|im_start|>assistant\n' }}"
+        "{% endif %}"
+    )
+    supports_system_role = "system role not supported" not in chat_template.lower()
 
-system_prompt = st.sidebar.text_area("system prompt", "You are a helpful AI assistant trained on a vast amount of "
-                                                      "human knowledge. Answer as concisely as possible.",
-                                     disabled=not supports_system_role)
+    system_prompt = st.sidebar.text_area("system prompt", "You are a helpful AI assistant trained on a vast amount of "
+                                                          "human knowledge. Answer as concisely as possible.",
+                                         disabled=not supports_system_role)
 
-context_length = st.sidebar.number_input('context length', value=400, min_value=100, step=100, max_value=32000,
-                                         help="how many maximum words to print, roughly")
+    context_length = st.sidebar.number_input('context length', value=400, min_value=100, step=100, max_value=32000,
+                                             help="how many maximum words to print, roughly")
 
-temperature = st.sidebar.slider('temperature', min_value=0., max_value=1., step=.10, value=.5,
-                                help="lower means less creative but more accurate")
+    temperature = st.sidebar.slider('temperature', min_value=0., max_value=1., step=.10, value=.5,
+                                    help="lower means less creative but more accurate")
 
-st.sidebar.markdown("---")
-actions = st.sidebar.columns(2)
+    st.sidebar.markdown("---")
+    actions = st.sidebar.columns(2)
 
 st.sidebar.markdown("---")
 st.sidebar.markdown(f"v{ver} / st {st.__version__}")
@@ -156,7 +159,7 @@ def queue_chat(the_prompt, continuation=""):
     st.rerun()
 
 
-if actions[0].button("😶‍🌫️ Forget", use_container_width=True,
+if model and actions[0].button("😶‍🌫️ Forget", use_container_width=True,
                      help="Forget the previous conversations."):
     st.session_state.messages = [{"role": "assistant", "content": assistant_greeting}]
     if "prompt" in st.session_state and st.session_state["prompt"]:
@@ -164,7 +167,7 @@ if actions[0].button("😶‍🌫️ Forget", use_container_width=True,
         st.session_state["continuation"] = None
     st.rerun()
 
-if actions[1].button("🔂 Continue", use_container_width=True,
+if model and actions[1].button("🔂 Continue", use_container_width=True,
                      help="Continue the generation."):
 
     user_prompts = [msg["content"] for msg in st.session_state.messages if msg["role"] == "user"]
