@@ -122,7 +122,7 @@ model_ref = st.sidebar.selectbox("model", model_refs.keys(), format_func=lambda 
                                  help="See https://huggingface.co/mlx-community for more models. Add your favorites "
                                       "to models.txt")
 
-if model_ref.strip() is not "-":
+if model_ref.strip() != "-":
     model, tokenizer = load_model_and_cache(model_ref)
 
     chat_template = tokenizer.chat_template or (
