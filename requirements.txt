@@ -9,7 +9,7 @@ filelock==3.14.0
 fsspec==2024.6.0
 gitdb==4.0.11
 GitPython==3.1.43
-huggingface-hub==0.23.2
+huggingface-hub==0.23.3
 idna==3.7
 Jinja2==3.1.4
 jsonschema==4.22.0
@@ -17,10 +17,10 @@ jsonschema-specifications==2023.12.1
 markdown-it-py==3.0.0
 MarkupSafe==2.1.5
 mdurl==0.1.2
-mlx==0.14.1
+mlx==0.15.0
 mlx-lm==0.14.3
 numpy==1.26.4
-packaging==24.0
+packaging==24.1
 pandas==2.2.2
 pillow==10.3.0
 protobuf==4.25.3
@@ -45,10 +45,10 @@ tiktoken==0.7.0
 tokenizers==0.19.1
 toml==0.10.2
 toolz==0.12.1
-tornado==6.4
+tornado==6.4.1
 tqdm==4.66.4
 transformers==4.41.2
-typing_extensions==4.12.1
+typing_extensions==4.12.2
 tzdata==2024.1
 urllib3==2.2.1
 watchdog==4.0.1
