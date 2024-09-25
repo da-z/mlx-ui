@@ -7,7 +7,7 @@ from mlx_lm.utils import load, generate_step
 import argparse
 
 title = "MLX Chat"
-ver = "0.7.24"
+ver = "0.7.25"
 debug = False
 
 
