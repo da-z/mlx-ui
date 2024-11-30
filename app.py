@@ -15,7 +15,7 @@ def generate(the_prompt, the_model):
     tokens = []
     skip = 0
 
-    for (token, prob), n in zip(generate_step(mx.array(tokenizer.encode(the_prompt)), the_model, temperature),
+    for (token, prob), n in zip(generate_step(mx.array(tokenizer.encode(the_prompt)), the_model, temp=temperature),
                                 range(context_length)):
 
         if token == tokenizer.eos_token_id:
