@@ -7,7 +7,7 @@ from mlx_lm.utils import load, generate_step
 import argparse
 
 title = "MLX Chat"
-ver = "0.7.26"
+ver = "0.8"
 debug = False
 
 
@@ -15,7 +15,7 @@ def generate(the_prompt, the_model):
     tokens = []
     skip = 0
 
-    for (token, prob), n in zip(generate_step(mx.array(tokenizer.encode(the_prompt)), the_model, temp=temperature),
+    for (token, prob), n in zip(generate_step(mx.array(tokenizer.encode(the_prompt)), the_model),
                                 range(context_length)):
 
         if token == tokenizer.eos_token_id:
@@ -141,9 +141,6 @@ if model_ref.strip() != "-":
 
     context_length = st.sidebar.number_input('context length', value=400, min_value=100, step=100, max_value=32000,
                                              help="how many maximum words to print, roughly")
-
-    temperature = st.sidebar.slider('temperature', min_value=0., max_value=1., step=.10, value=.5,
-                                    help="lower means less creative but more accurate")
 
     st.sidebar.markdown("---")
     actions = st.sidebar.columns(2)
