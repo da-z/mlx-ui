@@ -3,7 +3,8 @@ import time
 
 import mlx.core as mx
 import streamlit as st
-from mlx_lm.utils import load, generate_step
+from mlx_lm import load
+from mlx_lm.generate import generate_step
 import argparse
 
 title = "MLX Chat"
