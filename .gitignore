@@ -6,3 +6,4 @@ venv
 __pycache__
 .ipynb*
 .history
+models.txt
