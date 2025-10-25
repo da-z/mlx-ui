@@ -7,8 +7,7 @@ if [ -d venv ]; then
 fi
 
 # create virtual env
-pipx install virtualenv
-virtualenv venv
+python3 -m venv venv
 
 # activate virtual env
 . ./venv/bin/activate
